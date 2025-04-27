@@ -1,14 +1,14 @@
 
 import os
 import random
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup  # Ensure python-telegram-bot package is installed and updated (>=20.0)
 from telegram.ext import CommandHandler, MessageHandler, ApplicationBuilder, ContextTypes, filters
 
 TOKEN = "7945188969:AAGqv31lZK0YaRjVTDqBXgTiCJyt1hyICnc"  # Replace with your token!
 
 # Create the main ቁጥር directory and subdirectories for each day
 os.makedirs("ቁጥር", exist_ok=True)
-weekdays = ["ሰኑይ", "ሠሉስ", "ረቡዕ", "ሐሙስ", "አርብ", "ቀዳሚት-ሰንበት", "ሰንበተ-ከርስቲያን-ቅድስት"]
+weekdays = ["ዘዘወትር","ሰኑይ", "ሠሉስ", "ረቡዕ", "ሐሙስ", "አርብ", "ቀዳሚት-ሰንበት", "ሰንበተ-ከርስቲያን-ቅድስት"]
 for day in weekdays:
     os.makedirs(os.path.join("ቁጥር", day), exist_ok=True)
 
