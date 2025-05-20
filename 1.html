@@ -1,76 +1,120 @@
-import React, { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tic Tac Toe - Telegram Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      background: #fff;
+      border: 2px solid #333;
+      font-size: 2em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cell.taken {
+      cursor: not-allowed;
+    }
+    #status {
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+    #restart {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div id="status">Player X's turn</div>
+  <div id="board"></div>
+  <button id="restart">Restart Game</button>
 
-const socket = io("https://your-socket-server-url"); // Replace with your actual Socket.IO server URL
+  <script>
+    const board = document.getElementById('board');
+    const status = document.getElementById('status');
+    const restart = document.getElementById('restart');
 
-const emptyBoard = Array(9).fill(null);
+    let cells = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let gameOver = false;
 
-export default function MultiplayerTicTacToe() {
-  const [board, setBoard] = useState(emptyBoard);
-  const [isMyTurn, setIsMyTurn] = useState(false);
-  const [symbol, setSymbol] = useState(null);
-  const [gameId, setGameId] = useState(null);
-  const [status, setStatus] = useState("Connecting...");
+    function checkWinner() {
+      const wins = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
 
-  useEffect(() => {
-    socket.on("connect", () => {
-      setStatus("Connected. Waiting for opponent...");
-      socket.emit("create_or_join_game");
+      for (let [a, b, c] of wins) {
+        if (cells[a] && cells[a] === cells[b] && cells[b] === cells[c]) {
+          return cells[a];
+        }
+      }
+      if (cells.every(cell => cell)) return 'draw';
+      return null;
+    }
+
+    function updateBoard() {
+      board.innerHTML = '';
+      cells.forEach((cell, i) => {
+        const div = document.createElement('div');
+        div.className = 'cell' + (cell ? ' taken' : '');
+        div.textContent = cell || '';
+        div.addEventListener('click', () => handleMove(i));
+        board.appendChild(div);
+      });
+    }
+
+    function handleMove(index) {
+      if (gameOver || cells[index]) return;
+      cells[index] = currentPlayer;
+      const winner = checkWinner();
+      if (winner) {
+        gameOver = true;
+        status.textContent = winner === 'draw' ? "It's a draw!" : `${winner} wins!`;
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        status.textContent = `Player ${currentPlayer}'s turn`;
+      }
+      updateBoard();
+    }
+
+    restart.addEventListener('click', () => {
+      cells = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameOver = false;
+      status.textContent = `Player ${currentPlayer}'s turn`;
+      updateBoard();
     });
 
-    socket.on("game_created", ({ gameId, symbol }) => {
-      setGameId(gameId);
-      setSymbol(symbol);
-      setIsMyTurn(symbol === "X");
-      setStatus("Game created. Waiting for opponent...");
-    });
-
-    socket.on("game_joined", ({ gameId, symbol }) => {
-      setGameId(gameId);
-      setSymbol(symbol);
-      setIsMyTurn(symbol === "X");
-      setStatus("Game started. You're " + symbol);
-    });
-
-    socket.on("update_board", ({ board, turn }) => {
-      setBoard(board);
-      setIsMyTurn(turn === symbol);
-    });
-
-    socket.on("game_over", ({ winner }) => {
-      if (winner === symbol) setStatus("You won!");
-      else if (winner === null) setStatus("Draw!");
-      else setStatus("You lost!");
-      setIsMyTurn(false);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [symbol]);
-
-  const handleClick = (index) => {
-    if (!isMyTurn || board[index]) return;
-    socket.emit("make_move", { gameId, index });
-  };
-
-  const renderCell = (index) => (
-    <div
-      key={index}
-      onClick={() => handleClick(index)}
-      className="w-24 h-24 border-2 border-black flex items-center justify-center text-3xl cursor-pointer"
-    >
-      {board[index]}
-    </div>
-  );
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold mb-4">Multiplayer Tic Tac Toe</h1>
-      <p className="mb-2">{status}</p>
-      <div className="grid grid-cols-3 gap-1">
-        {board.map((_, i) => renderCell(i))}
-      </div>
-    </div>
-  );
-}
+    updateBoard();
+  </script>
+</body>
+</html>
