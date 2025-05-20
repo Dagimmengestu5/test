@@ -1,12 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>HI</h1>
-    <h2>ok</h2>
-</body>
-</html>
+import React, { useEffect, useState } from "react";
+import { io } from "socket.io-client";
+
+const socket = io("https://your-socket-server-url"); // Replace with your actual Socket.IO server URL
+
+const emptyBoard = Array(9).fill(null);
+
+export default function MultiplayerTicTacToe() {
+  const [board, setBoard] = useState(emptyBoard);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [symbol, setSymbol] = useState(null);
+  const [gameId, setGameId] = useState(null);
+  const [status, setStatus] = useState("Connecting...");
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      setStatus("Connected. Waiting for opponent...");
+      socket.emit("create_or_join_game");
+    });
+
+    socket.on("game_created", ({ gameId, symbol }) => {
+      setGameId(gameId);
+      setSymbol(symbol);
+      setIsMyTurn(symbol === "X");
+      setStatus("Game created. Waiting for opponent...");
+    });
+
+    socket.on("game_joined", ({ gameId, symbol }) => {
+      setGameId(gameId);
+      setSymbol(symbol);
+      setIsMyTurn(symbol === "X");
+      setStatus("Game started. You're " + symbol);
+    });
+
+    socket.on("update_board", ({ board, turn }) => {
+      setBoard(board);
+      setIsMyTurn(turn === symbol);
+    });
+
+    socket.on("game_over", ({ winner }) => {
+      if (winner === symbol) setStatus("You won!");
+      else if (winner === null) setStatus("Draw!");
+      else setStatus("You lost!");
+      setIsMyTurn(false);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [symbol]);
+
+  const handleClick = (index) => {
+    if (!isMyTurn || board[index]) return;
+    socket.emit("make_move", { gameId, index });
+  };
+
+  const renderCell = (index) => (
+    <div
+      key={index}
+      onClick={() => handleClick(index)}
+      className="w-24 h-24 border-2 border-black flex items-center justify-center text-3xl cursor-pointer"
+    >
+      {board[index]}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <h1 className="text-2xl font-bold mb-4">Multiplayer Tic Tac Toe</h1>
+      <p className="mb-2">{status}</p>
+      <div className="grid grid-cols-3 gap-1">
+        {board.map((_, i) => renderCell(i))}
+      </div>
+    </div>
+  );
+}
