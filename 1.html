@@ -12,7 +12,7 @@
       padding: 20px;
     }
     h1 {
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
     #board {
       display: grid;
@@ -34,31 +34,81 @@
     .cell.taken {
       cursor: not-allowed;
     }
-    #status {
+    #status, #score {
       font-size: 1.2em;
       margin-top: 20px;
     }
-    #restart {
+    .button {
       margin-top: 20px;
       padding: 10px 20px;
       font-size: 1em;
+      cursor: pointer;
+    }
+    .inline-button {
+      display: inline-block;
+      margin-right: 10px;
+    }
+    #back-to-menu, #back-to-menu-online {
+      display: block;
+      width: 200px; /* Set width to 200px */
+      margin: 20px auto; /* Center align */
+      padding: 10px; /* Padding for button */
+      text-align: center; /* Center text */
+    }
+    #game-container, #difficulty-container, #online-container {
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Tic Tac Toe</h1>
-  <div id="status">Player X's turn</div>
-  <div id="board"></div>
-  <button id="restart">Restart Game</button>
+  <div id="menu">
+    <button class="button" id="single-player">Single Player</button>
+    <button class="button" id="local-multiplayer">Local Multiplayer</button>
+    <button class="button" id="online-multiplayer">Online Multiplayer</button>
+  </div>
+
+  <div id="difficulty-container">
+    <h2>Select Difficulty</h2>
+    <button class="button inline-button" id="low">Low 😌</button>
+    <button class="button inline-button" id="medium">Medium 😐</button>
+    <button class="button inline-button" id="hard">Hard 😠</button>
+    <button class="button" id="back-to-menu">Back to Menu</button>
+  </div>
+
+  <div id="online-container">
+    <h2>Online Multiplayer</h2>
+    <button class="button" id="share-link">Share Link</button>
+    <button class="button" id="active-users">Active Users</button> <!-- Renamed button -->
+    <button class="button" id="back-to-menu-online">Back to Menu</button>
+  </div>
+
+  <div id="game-container">
+    <div id="score">X: 0 | O: 0</div>
+    <div id="status">Player X's turn</div>
+    <div id="board"></div>
+    <div style="margin-top: 20px;">
+      <button class="button" id="continue">Continue</button>
+      <button class="button" id="back">Back to Main Menu</button>
+    </div>
+  </div>
 
   <script>
     const board = document.getElementById('board');
     const status = document.getElementById('status');
-    const restart = document.getElementById('restart');
+    const continueBtn = document.getElementById('continue');
+    const back = document.getElementById('back');
+    const scoreDisplay = document.getElementById('score');
+    const gameContainer = document.getElementById('game-container');
+    const menu = document.getElementById('menu');
+    const difficultyContainer = document.getElementById('difficulty-container');
+    const onlineContainer = document.getElementById('online-container');
 
     let cells = Array(9).fill(null);
     let currentPlayer = 'X';
     let gameOver = false;
+    let scores = { X: 0, O: 0 };
+    let startingPlayer = 'X';
 
     function checkWinner() {
       const wins = [
@@ -98,21 +148,101 @@
       const winner = checkWinner();
       if (winner) {
         gameOver = true;
+        if (winner !== 'draw') {
+          scores[winner]++;
+          scoreDisplay.textContent = `X: ${scores.X} | O: ${scores.O}`;
+        }
         status.textContent = winner === 'draw' ? "It's a draw!" : `${winner} wins!`;
       } else {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        status.textContent = `Player ${currentPlayer}'s turn`;
+        status.textContent = currentPlayer === 'X' ? "Player X's turn" : "Player O's turn";
       }
       updateBoard();
     }
 
-    restart.addEventListener('click', () => {
-      cells = Array(9).fill(null);
-      currentPlayer = 'X';
-      gameOver = false;
-      status.textContent = `Player ${currentPlayer}'s turn`;
+    continueBtn.addEventListener('click', () => {
+      const winner = checkWinner();
+      if (winner || gameOver) {
+        cells = Array(9).fill(null);
+        currentPlayer = startingPlayer === 'X' ? 'O' : 'X';
+        startingPlayer = currentPlayer;
+        gameOver = false;
+        status.textContent = `Player ${currentPlayer}'s turn`;
+      } else {
+        status.textContent = currentPlayer === 'X' ? "Player X's turn" : "Player O's turn";
+      }
       updateBoard();
     });
+
+    back.addEventListener('click', () => {
+      gameContainer.style.display = 'none';
+      menu.style.display = 'block';
+      cells = Array(9).fill(null);
+      gameOver = false;
+    });
+
+    document.getElementById('single-player').addEventListener('click', () => {
+      menu.style.display = 'none';
+      difficultyContainer.style.display = 'block';
+      startingPlayer = 'X';
+      currentPlayer = 'X';
+    });
+
+    document.getElementById('local-multiplayer').addEventListener('click', () => {
+      menu.style.display = 'none';
+      gameContainer.style.display = 'block';
+      startingPlayer = 'X'; // Start with Player X for the first game
+      currentPlayer = 'X'; // Set to Player X
+      updateBoard();
+      status.textContent = `Player ${currentPlayer}'s turn`;
+    });
+
+    document.getElementById('online-multiplayer').addEventListener('click', () => {
+      menu.style.display = 'none';
+      onlineContainer.style.display = 'block';
+    });
+
+    document.getElementById('share-link').addEventListener('click', () => {
+      // Implement logic to generate and share a link
+      alert("Share this link with your friend: [Your Game Link]");
+    });
+
+    document.getElementById('active-users').addEventListener('click', () => {
+      // Implement logic to search for active users
+      alert("Active users functionality to be implemented.");
+    });
+
+    document.getElementById('back-to-menu-online').addEventListener('click', () => {
+      onlineContainer.style.display = 'none';
+      menu.style.display = 'block';
+    });
+
+    document.getElementById('back-to-menu').addEventListener('click', () => {
+      difficultyContainer.style.display = 'none';
+      menu.style.display = 'block';
+    });
+
+    document.getElementById('low').addEventListener('click', () => {
+      aiDifficulty = 'low';
+      startGame();
+    });
+
+    document.getElementById('medium').addEventListener('click', () => {
+      aiDifficulty = 'medium';
+      startGame();
+    });
+
+    document.getElementById('hard').addEventListener('click', () => {
+      aiDifficulty = 'hard'; // Set hard mode
+      startGame();
+    });
+
+    function startGame() {
+      menu.style.display = 'none';
+      difficultyContainer.style.display = 'none'; // Hide difficulty buttons
+      gameContainer.style.display = 'block';
+      updateBoard();
+    }
 
     updateBoard();
   </script>
