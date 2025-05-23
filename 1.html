@@ -120,6 +120,7 @@
     let gameOver = false;
     let scores = { X: 0, O: 0 };
     let startingPlayer = 'X';
+    let aiDifficulty = 'low'; // Default AI difficulty
 
     function checkWinner() {
       const wins = [
@@ -165,10 +166,73 @@
         }
         status.textContent = winner === 'draw' ? "It's a draw!" : `${winner} wins!`;
       } else {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        status.textContent = currentPlayer === 'X' ? "Player X's turn" : "Player O's turn";
+        if (currentPlayer === 'X') {
+          currentPlayer = 'O';
+          status.textContent = "Player O's turn";
+          if (gameMode === 'single') {
+            aiMove(); // Call AI move for single player
+          }
+        } else {
+          currentPlayer = 'X';
+          status.textContent = "Player X's turn";
+        }
       }
       updateBoard();
+    }
+
+    function aiMove() {
+      let bestMove = minimax(cells, 'O');
+      cells[bestMove.index] = 'O'; // AI makes its move
+      const winner = checkWinner();
+      if (winner) {
+        gameOver = true;
+        if (winner !== 'draw') {
+          scores[winner]++;
+          scoreDisplay.textContent = `X: ${scores.X} | O: ${scores.O}`;
+        }
+        status.textContent = winner === 'draw' ? "It's a draw!" : `${winner} wins!`;
+      } else {
+        currentPlayer = 'X';
+        status.textContent = "Player X's turn";
+      }
+      updateBoard();
+    }
+
+    function minimax(newCells, player) {
+      const winner = checkWinner();
+      if (winner === 'X') return { score: -10 };
+      if (winner === 'O') return { score: 10 };
+      if (winner === 'draw') return { score: 0 };
+
+      let moves = [];
+      newCells.forEach((cell, index) => {
+        if (cell === null) {
+          newCells[index] = player;
+          const score = minimax(newCells, player === 'X' ? 'O' : 'X').score;
+          moves.push({ index, score });
+          newCells[index] = null; // Reset the cell
+        }
+      });
+
+      let bestMove;
+      if (player === 'O') {
+        let maxScore = -Infinity;
+        moves.forEach(move => {
+          if (move.score > maxScore) {
+            maxScore = move.score;
+            bestMove = move;
+          }
+        });
+      } else {
+        let minScore = Infinity;
+        moves.forEach(move => {
+          if (move.score < minScore) {
+            minScore = move.score;
+            bestMove = move;
+          }
+        });
+      }
+      return bestMove;
     }
 
     continueBtn.addEventListener('click', () => {
@@ -195,6 +259,7 @@
       difficultyContainer.style.display = 'block';
       startingPlayer = 'X';
       currentPlayer = 'X';
+      gameMode = 'single'; // Set game mode to single player
     });
 
     document.getElementById('local-multiplayer').addEventListener('click', () => {
@@ -202,6 +267,7 @@
       gameContainer.style.display = 'block';
       startingPlayer = 'X';
       currentPlayer = 'X';
+      gameMode = 'local'; // Set game mode to local multiplayer
       updateBoard();
       status.textContent = `Player ${currentPlayer}'s turn`;
     });
@@ -231,14 +297,17 @@
     });
 
     document.getElementById('low').addEventListener('click', () => {
+      aiDifficulty = 'low';
       startGame();
     });
 
     document.getElementById('medium').addEventListener('click', () => {
+      aiDifficulty = 'medium';
       startGame();
     });
 
     document.getElementById('hard').addEventListener('click', () => {
+      aiDifficulty = 'hard'; // Set hard mode
       startGame();
     });
 
