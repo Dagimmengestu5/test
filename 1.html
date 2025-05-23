@@ -50,10 +50,10 @@
     }
     #back-to-menu, #back-to-menu-online {
       display: block;
-      width: 200px; /* Set width to 200px */
-      margin: 20px auto; /* Center align */
-      padding: 10px; /* Padding for button */
-      text-align: center; /* Center text */
+      width: 200px;
+      margin: 20px auto;
+      padding: 10px;
+      text-align: center;
     }
     #game-container, #difficulty-container, #online-container {
       display: none;
@@ -61,19 +61,12 @@
 
     /* Responsive styles for mobile devices */
     @media (max-width: 600px) {
-      #board {
-        grid-template-columns: repeat(3, 80px);
-        grid-template-rows: repeat(3, 80px);
-      }
-      .cell {
-        font-size: 1.5em; /* Smaller font size */
-      }
       .button {
-        padding: 8px 16px; /* Smaller padding */
-        font-size: 0.9em; /* Smaller font size */
-      }
-      #back-to-menu, #back-to-menu-online {
-        width: 150px; /* Adjust width for mobile */
+        display: block; /* Make buttons block */
+        width: 100%; /* Full width */
+        margin: 10px auto; /* Center with margin */
+        padding: 10px; /* Adjust padding */
+        font-size: 1em; /* Font size */
       }
     }
   </style>
@@ -186,8 +179,6 @@
         startingPlayer = currentPlayer;
         gameOver = false;
         status.textContent = `Player ${currentPlayer}'s turn`;
-      } else {
-        status.textContent = currentPlayer === 'X' ? "Player X's turn" : "Player O's turn";
       }
       updateBoard();
     });
@@ -209,8 +200,8 @@
     document.getElementById('local-multiplayer').addEventListener('click', () => {
       menu.style.display = 'none';
       gameContainer.style.display = 'block';
-      startingPlayer = 'X'; // Start with Player X for the first game
-      currentPlayer = 'X'; // Set to Player X
+      startingPlayer = 'X';
+      currentPlayer = 'X';
       updateBoard();
       status.textContent = `Player ${currentPlayer}'s turn`;
     });
@@ -221,12 +212,11 @@
     });
 
     document.getElementById('share-link').addEventListener('click', () => {
-      // Implement logic to generate and share a link
-      alert("Share this link with your friend: [Your Game Link]");
+      const gameLink = "https://your-game-link.com"; // Replace with actual link
+      alert(`Share this link with your friend: ${gameLink}`);
     });
 
     document.getElementById('active-users').addEventListener('click', () => {
-      // Implement logic to search for active users
       alert("Active users functionality to be implemented.");
     });
 
@@ -241,23 +231,20 @@
     });
 
     document.getElementById('low').addEventListener('click', () => {
-      aiDifficulty = 'low';
       startGame();
     });
 
     document.getElementById('medium').addEventListener('click', () => {
-      aiDifficulty = 'medium';
       startGame();
     });
 
     document.getElementById('hard').addEventListener('click', () => {
-      aiDifficulty = 'hard'; // Set hard mode
       startGame();
     });
 
     function startGame() {
       menu.style.display = 'none';
-      difficultyContainer.style.display = 'none'; // Hide difficulty buttons
+      difficultyContainer.style.display = 'none';
       gameContainer.style.display = 'block';
       updateBoard();
     }
