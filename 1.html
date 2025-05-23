@@ -58,6 +58,24 @@
     #game-container, #difficulty-container, #online-container {
       display: none;
     }
+
+    /* Responsive styles for mobile devices */
+    @media (max-width: 600px) {
+      #board {
+        grid-template-columns: repeat(3, 80px);
+        grid-template-rows: repeat(3, 80px);
+      }
+      .cell {
+        font-size: 1.5em; /* Smaller font size */
+      }
+      .button {
+        padding: 8px 16px; /* Smaller padding */
+        font-size: 0.9em; /* Smaller font size */
+      }
+      #back-to-menu, #back-to-menu-online {
+        width: 150px; /* Adjust width for mobile */
+      }
+    }
   </style>
 </head>
 <body>
@@ -79,7 +97,7 @@
   <div id="online-container">
     <h2>Online Multiplayer</h2>
     <button class="button" id="share-link">Share Link</button>
-    <button class="button" id="active-users">Active Users</button> <!-- Renamed button -->
+    <button class="button" id="active-users">Active Users</button>
     <button class="button" id="back-to-menu-online">Back to Menu</button>
   </div>
 
