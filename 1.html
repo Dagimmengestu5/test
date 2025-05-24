@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tic Tac Toe - Telegram Web App</title>
+  <title>Tic Tac Toe</title>
   <style>
     :root {
       --bg-color: #f0f0f0;
@@ -33,9 +33,23 @@
       padding: 20px;
       transition: background 0.3s, color 0.3s;
     }
+
+    .logo {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2c3e50;
+      max-width:350px;
+    }
+
+    .dark-mode .logo {
+      color: #f0f0f0;
+    }
+
     h1 {
       margin-bottom: 20px;
     }
+
     #board {
       display: grid;
       grid-template-columns: repeat(3, 100px);
@@ -44,6 +58,7 @@
       justify-content: center;
       margin: 20px auto;
     }
+
     .cell {
       background: var(--cell-bg);
       border: 2px solid var(--cell-border);
@@ -54,13 +69,16 @@
       justify-content: center;
       transition: background 0.3s, border-color 0.3s;
     }
+
     .cell.taken {
       cursor: not-allowed;
     }
+
     #status, #score {
       font-size: 1.2em;
       margin-top: 20px;
     }
+
     .button {
       margin-top: 20px;
       padding: 10px 20px;
@@ -72,13 +90,16 @@
       border-radius: 5px;
       transition: background 0.3s, color 0.3s;
     }
+
     .button:hover {
       background: var(--button-hover);
     }
+
     .inline-button {
       display: inline-block;
       margin-right: 10px;
     }
+
     #back-to-menu {
       display: block;
       width: 200px;
@@ -86,6 +107,7 @@
       padding: 10px;
       text-align: center;
     }
+
     #game-container, #difficulty-container {
       display: none;
     }
@@ -112,6 +134,7 @@
         padding: 10px;
         font-size: 1em;
       }
+
       #dark-mode-toggle {
         position: static;
         margin: 10px auto;
@@ -121,7 +144,13 @@
 </head>
 <body>
   <button id="dark-mode-toggle">🌙 Dark Mode</button>
+
+  <div class="logo-container">
+  <img src="./logo.png" alt="ethio_gamers" class="logo">
+</div>
+
   <h1>Tic Tac Toe</h1>
+
   <div id="menu">
     <button class="button" id="single-player">Single Player</button>
     <button class="button" id="local-multiplayer">Local Multiplayer</button>
@@ -169,7 +198,7 @@
     // Initialize dark mode
     updateDarkMode();
 
-    // Rest of your game code...
+    // Game logic
     const board = document.getElementById('board');
     const status = document.getElementById('status');
     const continueBtn = document.getElementById('continue');
