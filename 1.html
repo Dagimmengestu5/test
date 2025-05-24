@@ -34,16 +34,18 @@
       transition: background 0.3s, color 0.3s;
     }
 
+    .logo-container {
+      margin: 20px auto;
+      max-width: 350px;
+    }
+
     .logo {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin: 20px 0;
-      color: #2c3e50;
-      max-width:350px;
+      width: 100%;
+      height: auto;
     }
 
     .dark-mode .logo {
-      color: #f0f0f0;
+      filter: brightness(0.8);
     }
 
     h1 {
@@ -145,9 +147,9 @@
 <body>
   <button id="dark-mode-toggle">🌙 Dark Mode</button>
 
-  <div class="logo-container">
-  <img src="./logo.png" alt="ethio_gamers" class="logo">
-</div>
+  <div class="logo-container" id="logo-container">
+    <img src="./logo.png" alt="ethio_gamers" class="logo">
+  </div>
 
   <h1>Tic Tac Toe</h1>
 
@@ -207,6 +209,7 @@
     const gameContainer = document.getElementById('game-container');
     const menu = document.getElementById('menu');
     const difficultyContainer = document.getElementById('difficulty-container');
+    const logoContainer = document.getElementById('logo-container');
 
     let cells = Array(9).fill(null);
     let currentPlayer = 'X';
@@ -337,6 +340,27 @@
       return bestMove;
     }
 
+    function showMenu() {
+      menu.style.display = 'block';
+      difficultyContainer.style.display = 'none';
+      gameContainer.style.display = 'none';
+      logoContainer.style.display = 'block';
+    }
+
+    function showDifficulty() {
+      menu.style.display = 'none';
+      difficultyContainer.style.display = 'block';
+      gameContainer.style.display = 'none';
+      logoContainer.style.display = 'none';
+    }
+
+    function showGame() {
+      menu.style.display = 'none';
+      difficultyContainer.style.display = 'none';
+      gameContainer.style.display = 'block';
+      logoContainer.style.display = 'none';
+    }
+
     continueBtn.addEventListener('click', () => {
       const winner = checkWinner();
       if (winner || gameOver) {
@@ -349,24 +373,17 @@
       updateBoard();
     });
 
-    back.addEventListener('click', () => {
-      gameContainer.style.display = 'none';
-      menu.style.display = 'block';
-      cells = Array(9).fill(null);
-      gameOver = false;
-    });
+    back.addEventListener('click', showMenu);
 
     document.getElementById('single-player').addEventListener('click', () => {
-      menu.style.display = 'none';
-      difficultyContainer.style.display = 'block';
+      showDifficulty();
       startingPlayer = 'X';
       currentPlayer = 'X';
       gameMode = 'single';
     });
 
     document.getElementById('local-multiplayer').addEventListener('click', () => {
-      menu.style.display = 'none';
-      gameContainer.style.display = 'block';
+      showGame();
       startingPlayer = 'X';
       currentPlayer = 'X';
       gameMode = 'local';
@@ -374,33 +391,25 @@
       status.textContent = `Player ${currentPlayer}'s turn`;
     });
 
-    document.getElementById('back-to-menu').addEventListener('click', () => {
-      difficultyContainer.style.display = 'none';
-      menu.style.display = 'block';
-    });
+    document.getElementById('back-to-menu').addEventListener('click', showMenu);
 
     document.getElementById('low').addEventListener('click', () => {
       aiDifficulty = 'low';
-      startGame();
+      showGame();
     });
 
     document.getElementById('medium').addEventListener('click', () => {
       aiDifficulty = 'medium';
-      startGame();
+      showGame();
     });
 
     document.getElementById('hard').addEventListener('click', () => {
       aiDifficulty = 'hard';
-      startGame();
+      showGame();
     });
 
-    function startGame() {
-      menu.style.display = 'none';
-      difficultyContainer.style.display = 'none';
-      gameContainer.style.display = 'block';
-      updateBoard();
-    }
-
+    // Initialize the game
+    showMenu();
     updateBoard();
   </script>
 </body>
