@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Toe Game</title>
+  <style>
+    :root {
+      --bg-color: #f0f0f0;
+      --text-color: #333;
+      --cell-bg: #fff;
+      --cell-border: #333;
+      --button-bg: #fff;
+      --button-text: #333;
+      --button-hover: #e0e0e0;
+    }
+
+    .dark-mode {
+      --bg-color: #121212;
+      --text-color: #f0f0f0;
+      --cell-bg: #1e1e1e;
+      --cell-border: #555;
+      --button-bg: #333;
+      --button-text: #f0f0f0;
+      --button-hover: #444;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .button {
+      display: block;
+      width: 220px;
+      margin: 10px auto;
+      padding: 12px;
+      font-size: 1em;
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: 2px solid var(--cell-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      user-select: none;
+    }
+
+    .button:hover {
+      background: var(--button-hover);
+    }
+
+    #dark-mode-toggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: none;
+      background: var(--button-bg);
+      color: var(--button-text);
+      cursor: pointer;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    .cell {
+      background: var(--cell-bg);
+      border: 2px solid var(--cell-border);
+      font-size: 2.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .cell.taken {
+      cursor: not-allowed;
+    }
+
+    #status, #score {
+      margin-top: 20px;
+      font-size: 1.2em;
+      min-height: 1.3em;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <button id="dark-mode-toggle">🌙</button>
+  <h1>Welcome to Tic Tac Toe</h1>
+
+  <!-- Main Menu -->
+  <div id="main-menu">
+    <button class="button" onclick="showSinglePlayerDifficulty()">Single Player</button>
+    <button class="button" onclick="startMultiplayer()">Local Multiplayer</button>
+  </div>
+
+  <!-- Single Player Difficulty Menu -->
+  <div id="single-player-menu" class="hidden">
+    <h2>Choose Difficulty</h2>
+    <button class="button" onclick="startSinglePlayer('low')">Low</button>
+    <button class="button" onclick="startSinglePlayer('medium')">Medium</button>
+    <button class="button" onclick="startSinglePlayer('hard')">Hard</button>
+    <button class="button" onclick="goBackToMain()">🔙 Back to Main Menu</button>
+  </div>
+
+  <!-- Game Container -->
+  <div id="game-container" class="hidden">
+    <div id="board"></div>
+    <div id="status"></div>
+    <div id="score"></div>
+    <button class="button" onclick="resetGame()">🔁 Play Again</button>
+    <button class="button" onclick="goBackToMain()">🔙 Back to Main Menu</button>
+  </div>
+
+  <script>
+    const body = document.body;
+    const boardElement = document.getElementById('board');
+    const statusElement = document.getElementById('status');
+    const scoreElement = document.getElementById('score');
+    const gameContainer = document.getElementById('game-container');
+    const mainMenu = document.getElementById('main-menu');
+    const singlePlayerMenu = document.getElementById('single-player-menu');
+
+    // Game variables
+    let board = Array(9).fill("");
+    let currentPlayer = "❌";
+    let vsBot = false;
+    let gameActive = false;
+    let scores = { "❌": 0, "⭕": 0 };
+    let lastLoser = "❌"; // loser of previous round starts next round
+    let difficulty = "low"; // default AI difficulty
+
+    const winPatterns = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    // Show Single Player difficulty menu
+    function showSinglePlayerDifficulty() {
+      mainMenu.classList.add("hidden");
+      singlePlayerMenu.classList.remove("hidden");
+    }
+
+    // Back to main menu from anywhere
+    function goBackToMain() {
+      gameContainer.classList.add("hidden");
+      singlePlayerMenu.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+      resetState();
+    }
+
+    function resetState() {
+      board = Array(9).fill("");
+      gameActive = false;
+      currentPlayer = "❌";
+      vsBot = false;
+      difficulty = "low";
+      statusElement.textContent = "";
+      scoreElement.textContent = "";
+    }
+
+    // Start single player game with selected difficulty
+    function startSinglePlayer(level) {
+  vsBot = true;
+  difficulty = level;
+  currentPlayer = lastLoser;  // loser starts next round
+  scores = { "❌": 0, "⭕": 0 }; // reset score when mode changes
+  singlePlayerMenu.classList.add("hidden");
+  gameContainer.classList.remove("hidden");
+  resetGame();
+}
+
+function startMultiplayer() {
+  vsBot = false;
+  currentPlayer = lastLoser;  // loser starts next round
+  scores = { "❌": 0, "⭕": 0 }; // reset score when mode changes
+  mainMenu.classList.add("hidden");
+  gameContainer.classList.remove("hidden");
+  resetGame();
+}
+    // Draw the board on the page
+    function drawBoard() {
+      boardElement.innerHTML = "";
+      board.forEach((cell, i) => {
+        const div = document.createElement("div");
+        div.className = "cell" + (cell ? " taken" : "");
+        div.textContent = cell;
+        div.addEventListener("click", () => makeMove(i));
+        boardElement.appendChild(div);
+      });
+    }
+
+    // Handle player move
+    function makeMove(index) {
+      if (!gameActive || board[index]) return; // ignore if game not active or cell taken
+
+      board[index] = currentPlayer;
+      drawBoard();
+
+      if (checkWin(currentPlayer)) {
+        gameActive = false;
+        scores[currentPlayer]++;
+        updateScore();
+        statusElement.textContent = `${currentPlayer} wins!`;
+        lastLoser = currentPlayer === "❌" ? "⭕" : "❌";
+      }
+      else if (board.every(cell => cell !== "")) {
+        gameActive = false;
+        statusElement.textContent = "It's a draw!";
+        // On draw, alternate starter
+        lastLoser = currentPlayer === "❌" ? "⭕" : "❌";
+      }
+      else {
+        currentPlayer = currentPlayer === "❌" ? "⭕" : "❌";
+        statusElement.textContent = `${currentPlayer}'s Turn`;
+
+        if (vsBot && currentPlayer === "⭕") {
+          botMove();
+        }
+      }
+    }
+
+    // Check if player p has won
+    function checkWin(p) {
+      return winPatterns.some(pattern => pattern.every(i => board[i] === p));
+    }
+
+    // Update the score display
+    function updateScore() {
+      scoreElement.textContent = `❌: ${scores["❌"]} | ⭕: ${scores["⭕"]}`;
+    }
+
+    // Reset the game board for a new round
+   function resetGame() {
+  board = Array(9).fill("");
+  gameActive = true;
+  currentPlayer = lastLoser;
+  drawBoard();
+  updateScore();
+  statusElement.textContent = `${currentPlayer}'s Turn`;
+
+  if (vsBot && currentPlayer === "⭕") {
+    botMove();
+  }
+}
+
+
+    // Bot move depending on difficulty
+    function botMove() {
+      setTimeout(() => {
+        let moveIndex;
+        if (difficulty === "low") {
+          moveIndex = randomMove();
+        } else if (difficulty === "medium") {
+          moveIndex = mediumAIMove();
+        } else {
+          moveIndex = hardAIMove();
+        }
+        makeMove(moveIndex);
+      }, 500);
+    }
+
+    // Random move for low difficulty
+    function randomMove() {
+      const emptyIndices = board.map((v,i) => v === "" ? i : -1).filter(i => i !== -1);
+      return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    }
+
+    // Medium AI: tries to win, then block, else random
+    function mediumAIMove() {
+      // 1. Win if possible
+      let move = findWinningMove("⭕");
+      if (move !== -1) return move;
+
+      // 2. Block opponent win
+      move = findWinningMove("❌");
+      if (move !== -1) return move;
+
+      // 3. Else random
+      return randomMove();
+    }
+
+    // Hard AI: minimax algorithm
+    function hardAIMove() {
+      let bestScore = -Infinity;
+      let bestMove = -1;
+
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === "") {
+          board[i] = "⭕";
+          let score = minimax(board, false);
+          board[i] = "";
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = i;
+          }
+        }
+      }
+      return bestMove;
+    }
+
+    function minimax(newBoard, isMaximizing) {
+      if (checkWinOnBoard(newBoard, "⭕")) return 10;
+      if (checkWinOnBoard(newBoard, "❌")) return -10;
+      if (newBoard.every(cell => cell !== "")) return 0;
+
+      if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i=0; i<9; i++) {
+          if (newBoard[i] === "") {
+            newBoard[i] = "⭕";
+            let score = minimax(newBoard, false);
+            newBoard[i] = "";
+            bestScore = Math.max(score, bestScore);
+          }
+        }
+        return bestScore;
+      } else {
+        let bestScore = Infinity;
+        for (let i=0; i<9; i++) {
+          if (newBoard[i] === "") {
+            newBoard[i] = "❌";
+            let score = minimax(newBoard, true);
+            newBoard[i] = "";
+            bestScore = Math.min(score, bestScore);
+          }
+        }
+        return bestScore;
+      }
+    }
+
+    // Helper for minimax - check win on given board state
+    function checkWinOnBoard(bd, player) {
+      return winPatterns.some(pattern => pattern.every(i => bd[i] === player));
+    }
+
+    // Find winning move for a player, return index or -1
+    function findWinningMove(player) {
+      for (let i=0; i<9; i++) {
+        if (board[i] === "") {
+          board[i] = player;
+          if (checkWin(player)) {
+            board[i] = "";
+            return i;
+          }
+          board[i] = "";
+        }
+      }
+      return -1;
+    }
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("dark-mode-toggle");
+    darkModeToggle.addEventListener("click", () => {
+      body.classList.toggle("dark-mode");
+      darkModeToggle.textContent = body.classList.contains("dark-mode") ? "☀️" : "🌙";
+    });
+
+    // Initial setup
+    drawBoard();
+  </script>
+</body>
+</html>
+
