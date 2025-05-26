@@ -2,415 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tic Tac Toe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ethio Gamers</title>
   <style>
     :root {
-      --bg-color: #f0f0f0;
-      --text-color: #333;
-      --cell-bg: #fff;
-      --cell-border: #333;
-      --button-bg: #fff;
-      --button-text: #333;
-      --button-hover: #e0e0e0;
+      --bg-color: #121212;
+      --text-color: white;
+      --button-bg: #2c2c2c;
+      --button-text: white;
+      --toggle-bg: #333;
     }
 
-    .dark-mode {
-      --bg-color: #121212;
-      --text-color: #f0f0f0;
-      --cell-bg: #1e1e1e;
-      --cell-border: #555;
-      --button-bg: #333;
-      --button-text: #f0f0f0;
-      --button-hover: #444;
+    body.light {
+      --bg-color: #f0f0f0;
+      --text-color: black;
+      --button-bg: #e0e0e0;
+      --button-text: black;
+      --toggle-bg: #ddd;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: var(--bg-color);
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
       color: var(--text-color);
-      padding: 20px;
-      transition: background 0.3s, color 0.3s;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      transition: background-color 0.3s, color 0.3s;
     }
 
-    .logo-container {
-      margin: 20px auto;
-      max-width: 350px;
-    }
-
-    .logo {
-      width: 100%;
-      height: auto;
-    }
-
-    .dark-mode .logo {
-      filter: brightness(0.8);
-    }
-
-    h1 {
+    .toggle-button {
+      background-color: var(--toggle-bg);
+      color: var(--text-color);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
       margin-bottom: 20px;
     }
 
-    #board {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-template-rows: repeat(3, 100px);
-      gap: 5px;
-      justify-content: center;
-      margin: 20px auto;
+    .logo {
+      width: 280px;
+      height: auto;
+      margin-bottom: 30px;
     }
 
-    .cell {
-      background: var(--cell-bg);
-      border: 2px solid var(--cell-border);
+    h1 {
       font-size: 2em;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s, border-color 0.3s;
+      margin-bottom: 20px;
     }
 
-    .cell.taken {
-      cursor: not-allowed;
-    }
-
-    #status, #score {
-      font-size: 1.2em;
-      margin-top: 20px;
-    }
-
-    .button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 1em;
-      cursor: pointer;
-      background: var(--button-bg);
+    .menu-button {
+      background-color: var(--button-bg);
       color: var(--button-text);
-      border: 1px solid var(--cell-border);
-      border-radius: 5px;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .button:hover {
-      background: var(--button-hover);
-    }
-
-    .inline-button {
-      display: inline-block;
-      margin-right: 10px;
-    }
-
-    #back-to-menu {
-      display: block;
-      width: 200px;
-      margin: 20px auto;
-      padding: 10px;
-      text-align: center;
-    }
-
-    #game-container, #difficulty-container {
-      display: none;
-    }
-
-    /* Dark mode toggle button */
-    #dark-mode-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 8px 15px;
-      border-radius: 20px;
       border: none;
+      padding: 15px 40px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      background: var(--button-bg);
-      color: var(--button-text);
-      border: 1px solid var(--cell-border);
+      width: 250px;
     }
 
-    @media (max-width: 600px) {
-      .button {
-        display: block;
-        width: 100%;
-        margin: 10px auto;
-        padding: 10px;
-        font-size: 1em;
-      }
-
-      #dark-mode-toggle {
-        position: static;
-        margin: 10px auto;
-      }
+    .menu-button:hover {
+      opacity: 0.9;
+    }
+    button a {
+        text-decoration: none;
+        color: var(--button-text);
     }
   </style>
 </head>
 <body>
-  <button id="dark-mode-toggle">🌙 Dark Mode</button>
+  <button class="toggle-button" onclick="toggleTheme()">🌞 Light Mode</button>
 
-  <div class="logo-container" id="logo-container">
-    <img src="./logo.png" alt="ethio_gamers" class="logo">
-  </div>
+  <img src="logo.png" alt="Ethio Gamers Logo" class="logo" />
 
-  <h1>Tic Tac Toe</h1>
+  <h1>Ethio-Gamers</h1>
 
-  <div id="menu">
-    <button class="button" id="single-player">Single Player</button>
-    <button class="button" id="local-multiplayer">Local Multiplayer</button>
-  </div>
-
-  <div id="difficulty-container">
-    <h2>Select Difficulty</h2>
-    <button class="button inline-button" id="low">Low 😌</button>
-    <button class="button inline-button" id="medium">Medium 😐</button>
-    <button class="button inline-button" id="hard">Hard 😠</button>
-    <button class="button" id="back-to-menu">Back to Menu</button>
-  </div>
-
-  <div id="game-container">
-    <div id="score">X: 0 | O: 0</div>
-    <div id="status">Player X's turn</div>
-    <div id="board"></div>
-    <div style="margin-top: 20px;">
-      <button class="button" id="continue">Continue</button>
-      <button class="button" id="back">Back to Main Menu</button>
-    </div>
-  </div>
+  <button class="menu-button"><a href="xo.html">Tic Tac Toe</a></button>
+  <button class="menu-button"><a href="Checkers.html">♟️ Checkers</a></button>
 
   <script>
-    // Dark mode toggle functionality
-    const darkModeToggle = document.getElementById('dark-mode-toggle');
-    let darkMode = localStorage.getItem('darkMode') === 'true';
-
-    function updateDarkMode() {
-      if (darkMode) {
-        document.body.classList.add('dark-mode');
-        darkModeToggle.textContent = '☀️ Light Mode';
-      } else {
-        document.body.classList.remove('dark-mode');
-        darkModeToggle.textContent = '🌙 Dark Mode';
-      }
-      localStorage.setItem('darkMode', darkMode);
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      const toggle = document.querySelector(".toggle-button");
+      toggle.textContent = document.body.classList.contains("light")
+        ? "🌙 Dark Mode"
+        : "🌞 Light Mode";
     }
 
-    darkModeToggle.addEventListener('click', () => {
-      darkMode = !darkMode;
-      updateDarkMode();
-    });
-
-    // Initialize dark mode
-    updateDarkMode();
-
-    // Game logic
-    const board = document.getElementById('board');
-    const status = document.getElementById('status');
-    const continueBtn = document.getElementById('continue');
-    const back = document.getElementById('back');
-    const scoreDisplay = document.getElementById('score');
-    const gameContainer = document.getElementById('game-container');
-    const menu = document.getElementById('menu');
-    const difficultyContainer = document.getElementById('difficulty-container');
-    const logoContainer = document.getElementById('logo-container');
-
-    let cells = Array(9).fill(null);
-    let currentPlayer = 'X';
-    let gameOver = false;
-    let scores = { X: 0, O: 0 };
-    let startingPlayer = 'X';
-    let aiDifficulty = 'low';
-    let gameMode = 'local';
-
-    function checkWinner() {
-      const wins = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6],
-      ];
-
-      for (let [a, b, c] of wins) {
-        if (cells[a] && cells[a] === cells[b] && cells[b] === cells[c]) {
-          return cells[a];
-        }
-      }
-      if (cells.every(cell => cell)) return 'draw';
-      return null;
+    function startSinglePlayer() {
+      alert("Starting Single Player Mode...");
     }
 
-    function updateBoard() {
-      board.innerHTML = '';
-      cells.forEach((cell, i) => {
-        const div = document.createElement('div');
-        div.className = 'cell' + (cell ? ' taken' : '');
-        div.textContent = cell || '';
-        div.addEventListener('click', () => handleMove(i));
-        board.appendChild(div);
-      });
+    function startLocalMultiplayer() {
+      alert("Starting Local Multiplayer Mode...");
     }
-
-    function handleMove(index) {
-      if (gameOver || cells[index]) return;
-      cells[index] = currentPlayer;
-      const winner = checkWinner();
-      if (winner) {
-        gameOver = true;
-        if (winner !== 'draw') {
-          scores[winner]++;
-          scoreDisplay.textContent = `X: ${scores.X} | O: ${scores.O}`;
-        }
-        status.textContent = winner === 'draw' ? "It's a draw!" : `${winner} wins!`;
-      } else {
-        if (currentPlayer === 'X') {
-          currentPlayer = 'O';
-          status.textContent = "Player O's turn";
-          if (gameMode === 'single') {
-            setTimeout(aiMove, 500);
-          }
-        } else {
-          currentPlayer = 'X';
-          status.textContent = "Player X's turn";
-        }
-      }
-      updateBoard();
-    }
-
-    function getRandomMove() {
-      const emptyCells = cells.map((cell, index) => cell === null ? index : null).filter(val => val !== null);
-      return emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    }
-
-    function aiMove() {
-      let move;
-      if (aiDifficulty === 'low') {
-        move = getRandomMove();
-      } else if (aiDifficulty === 'medium') {
-        move = Math.random() < 0.5 ? getRandomMove() : minimax(cells, 'O').index;
-      } else {
-        move = minimax(cells, 'O').index;
-      }
-
-      cells[move] = 'O';
-      const winner = checkWinner();
-      if (winner) {
-        gameOver = true;
-        if (winner !== 'draw') {
-          scores[winner]++;
-          scoreDisplay.textContent = `X: ${scores.X} | O: ${scores.O}`;
-        }
-        status.textContent = winner === 'draw' ? "It's a draw!" : `${winner} wins!`;
-      } else {
-        currentPlayer = 'X';
-        status.textContent = "Player X's turn";
-      }
-      updateBoard();
-    }
-
-    function minimax(newCells, player) {
-      const winner = checkWinner();
-      if (winner === 'X') return { score: -10 };
-      if (winner === 'O') return { score: 10 };
-      if (winner === 'draw') return { score: 0 };
-
-      let moves = [];
-      newCells.forEach((cell, index) => {
-        if (cell === null) {
-          newCells[index] = player;
-          const score = minimax(newCells, player === 'X' ? 'O' : 'X').score;
-          moves.push({ index, score });
-          newCells[index] = null;
-        }
-      });
-
-      let bestMove;
-      if (player === 'O') {
-        let maxScore = -Infinity;
-        moves.forEach(move => {
-          if (move.score > maxScore) {
-            maxScore = move.score;
-            bestMove = move;
-          }
-        });
-      } else {
-        let minScore = Infinity;
-        moves.forEach(move => {
-          if (move.score < minScore) {
-            minScore = move.score;
-            bestMove = move;
-          }
-        });
-      }
-      return bestMove;
-    }
-
-    function showMenu() {
-      menu.style.display = 'block';
-      difficultyContainer.style.display = 'none';
-      gameContainer.style.display = 'none';
-      logoContainer.style.display = 'block';
-    }
-
-    function showDifficulty() {
-      menu.style.display = 'none';
-      difficultyContainer.style.display = 'block';
-      gameContainer.style.display = 'none';
-      logoContainer.style.display = 'none';
-    }
-
-    function showGame() {
-      menu.style.display = 'none';
-      difficultyContainer.style.display = 'none';
-      gameContainer.style.display = 'block';
-      logoContainer.style.display = 'none';
-    }
-
-    continueBtn.addEventListener('click', () => {
-      const winner = checkWinner();
-      if (winner || gameOver) {
-        cells = Array(9).fill(null);
-        currentPlayer = startingPlayer === 'X' ? 'O' : 'X';
-        startingPlayer = currentPlayer;
-        gameOver = false;
-        status.textContent = `Player ${currentPlayer}'s turn`;
-      }
-      updateBoard();
-    });
-
-    back.addEventListener('click', showMenu);
-
-    document.getElementById('single-player').addEventListener('click', () => {
-      showDifficulty();
-      startingPlayer = 'X';
-      currentPlayer = 'X';
-      gameMode = 'single';
-    });
-
-    document.getElementById('local-multiplayer').addEventListener('click', () => {
-      showGame();
-      startingPlayer = 'X';
-      currentPlayer = 'X';
-      gameMode = 'local';
-      updateBoard();
-      status.textContent = `Player ${currentPlayer}'s turn`;
-    });
-
-    document.getElementById('back-to-menu').addEventListener('click', showMenu);
-
-    document.getElementById('low').addEventListener('click', () => {
-      aiDifficulty = 'low';
-      showGame();
-    });
-
-    document.getElementById('medium').addEventListener('click', () => {
-      aiDifficulty = 'medium';
-      showGame();
-    });
-
-    document.getElementById('hard').addEventListener('click', () => {
-      aiDifficulty = 'hard';
-      showGame();
-    });
-
-    // Initialize the game
-    showMenu();
-    updateBoard();
   </script>
 </body>
 </html>
