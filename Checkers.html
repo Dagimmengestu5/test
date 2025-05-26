@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHECKERS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #game-container {
+            width: 800px;
+            height: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #menu-screen, #game-mode-screen, #game-screen, #options-screen, #statistics-screen, #about-screen {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        #game-mode-screen, #game-screen, #options-screen, #statistics-screen, #about-screen {
+            display: none;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 48px;
+        }
+
+        .menu-item {
+            margin: 10px 0;
+            padding: 12px 30px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 200px;
+            text-align: center;
+        }
+
+        .menu-item:hover {
+            background-color: #45a049;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 15px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #checkers-board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 0;
+            border: 2px solid #333;
+            margin-top: 20px;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .light {
+            background-color: #f0d9b5;
+        }
+
+        .dark {
+            background-color: #b58863;
+        }
+
+        .piece {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .red {
+            background-color: #d40000;
+            border: 2px solid #a00000;
+        }
+
+        .black {
+            background-color: #333;
+            border: 2px solid #000;
+        }
+
+        .king::after {
+            content: "♔";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: gold;
+            font-size: 20px;
+        }
+
+        .selected {
+            box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.7);
+        }
+
+        .valid-move {
+            box-shadow: 0 0 10px 5px rgba(0, 255, 0, 0.5);
+        }
+
+        #game-info {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        #options-form, #statistics-content, #about-content {
+            width: 80%;
+            max-width: 500px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .save-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .statistics-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .player-turn-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .red-indicator {
+            background-color: #d40000;
+            border: 2px solid #a00000;
+        }
+
+        .black-indicator {
+            background-color: #333;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Menu Screen -->
+        <div id="menu-screen">
+            <h1>CHECKERS</h1>
+            <button class="menu-item" onclick="showScreen('game-mode-screen')">Play</button>
+            <button class="menu-item" onclick="showScreen('options-screen')">Options</button>
+            <button class="menu-item" onclick="showScreen('statistics-screen')">Statistics</button>
+            <button class="menu-item" onclick="showScreen('about-screen')">About</button>
+        </div>
+
+        <!-- Game Mode Selection Screen -->
+        <div id="game-mode-screen">
+            <button class="back-button" onclick="showScreen('menu-screen')">← Menu</button>
+            <h1>Select Game Mode</h1>
+            <button class="menu-item" onclick="startGame('computer')">Play vs Computer</button>
+            <button class="menu-item" onclick="startGame('friend')">Play with Friend</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen">
+            <button class="back-button" onclick="returnToMenu()">← Menu</button>
+            <div id="checkers-board"></div>
+            <div id="game-info">Red's turn <span class="player-turn-indicator red-indicator"></span></div>
+        </div>
+
+        <!-- Options Screen -->
+        <div id="options-screen">
+            <button class="back-button" onclick="showScreen('menu-screen')">← Menu</button>
+            <h1>Options</h1>
+            <div id="options-form">
+                <div class="option-group">
+                    <label for="difficulty">Difficulty (vs Computer):</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label for="starting-player">Starting Player (vs Computer):</label>
+                    <select id="starting-player">
+                        <option value="red">Red (Human)</option>
+                        <option value="black">Black (Computer)</option>
+                        <option value="random" selected>Random</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label for="board-color">Board Color:</label>
+                    <select id="board-color">
+                        <option value="classic" selected>Classic</option>
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                        <option value="gray">Gray</option>
+                    </select>
+                </div>
+                <button class="save-button" onclick="saveOptions()">Save Options</button>
+            </div>
+        </div>
+
+        <!-- Statistics Screen -->
+        <div id="statistics-screen">
+            <button class="back-button" onclick="showScreen('menu-screen')">← Menu</button>
+            <h1>Statistics</h1>
+            <div id="statistics-content">
+                <div class="statistics-item">
+                    <strong>Games Played:</strong> <span id="games-played">0</span>
+                </div>
+                <div class="statistics-item">
+                    <strong>Wins:</strong> <span id="wins">0</span>
+                </div>
+                <div class="statistics-item">
+                    <strong>Losses:</strong> <span id="losses">0</span>
+                </div>
+                <div class="statistics-item">
+                    <strong>Draws:</strong> <span id="draws">0</span>
+                </div>
+                <div class="statistics-item">
+                    <strong>Win Rate:</strong> <span id="win-rate">0%</span>
+                </div>
+                <div class="statistics-item">
+                    <strong>Friend Games Played:</strong> <span id="friend-games">0</span>
+                </div>
+                <button class="save-button" onclick="resetStatistics()">Reset Statistics</button>
+            </div>
+        </div>
+
+        <!-- About Screen -->
+        <div id="about-screen">
+            <button class="back-button" onclick="showScreen('menu-screen')">← Menu</button>
+            <h1>About</h1>
+            <div id="about-content">
+                <p>Checkers Game v1.1</p>
+                <p>Created with HTML, CSS, and JavaScript</p>
+                <p>Features:</p>
+                <ul>
+                    <li>Play against computer (3 difficulty levels)</li>
+                    <li>Local multiplayer (play with a friend)</li>
+                    <li>Customizable board colors</li>
+                    <li>Game statistics tracking</li>
+                </ul>
+                <p>Rules:</p>
+                <ul>
+                    <li>Regular pieces move diagonally forward</li>
+                    <li>Kings can move diagonally in any direction</li>
+                    <li>Capture opponent's pieces by jumping over them</li>
+                    <li>Multiple captures in one turn are allowed</li>
+                    <li>Win by capturing all opponent's pieces or blocking them</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let board = [];
+        let currentPlayer = 'red';
+        let selectedPiece = null;
+        let validMoves = [];
+        let gameOver = false;
+        let gameMode = 'computer'; // 'computer' or 'friend'
+        let difficulty = 'medium';
+        let startingPlayer = 'random';
+        let boardColor = 'classic';
+        let statistics = {
+            gamesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            friendGames: 0
+        };
+
+        // Initialize the game
+        function initGame() {
+            loadOptions();
+            loadStatistics();
+            setupEventListeners();
+        }
+
+        // Start a new game with selected mode
+        function startGame(mode) {
+            gameMode = mode;
+            createBoard();
+            showScreen('game-screen');
+        }
+
+        // Create the initial board
+        function createBoard() {
+            board = Array(8).fill().map(() => Array(8).fill(null));
+
+            // Set up red pieces (top)
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if ((row + col) % 2 === 1) {
+                        board[row][col] = { type: 'red', king: false };
+                    }
+                }
+            }
+
+            // Set up black pieces (bottom)
+            for (let row = 5; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if ((row + col) % 2 === 1) {
+                        board[row][col] = { type: 'black', king: false };
+                    }
+                }
+            }
+
+            renderBoard();
+
+            // Set starting player
+            if (gameMode === 'computer') {
+                if (startingPlayer === 'random') {
+                    currentPlayer = Math.random() < 0.5 ? 'red' : 'black';
+                } else {
+                    currentPlayer = startingPlayer;
+                }
+            } else {
+                // In friend mode, always start with red
+                currentPlayer = 'red';
+            }
+
+            updateGameInfo();
+            gameOver = false;
+
+            if (gameMode === 'computer' && currentPlayer === 'black') {
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        // Update game info display
+        function updateGameInfo() {
+            const indicator = document.querySelector('#game-info .player-turn-indicator');
+            indicator.className = 'player-turn-indicator ' + (currentPlayer === 'red' ? 'red-indicator' : 'black-indicator');
+            document.getElementById('game-info').innerHTML =
+                `${currentPlayer === 'red' ? 'Red' : 'Black'}'s turn <span class="player-turn-indicator ${currentPlayer === 'red' ? 'red-indicator' : 'black-indicator'}"></span>`;
+        }
+
+        // Render the board
+        function renderBoard() {
+            const boardElement = document.getElementById('checkers-board');
+            boardElement.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+
+                    // Highlight selected piece and valid moves
+                    if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
+                        square.classList.add('selected');
+                    } else if (validMoves.some(move => move.row === row && move.col === col)) {
+                        square.classList.add('valid-move');
+                    }
+
+                    // Add piece if exists
+                    if (board[row][col]) {
+                        const piece = document.createElement('div');
+                        piece.className = `piece ${board[row][col].type} ${board[row][col].king ? 'king' : ''}`;
+                        piece.dataset.row = row;
+                        piece.dataset.col = col;
+                        square.appendChild(piece);
+                    }
+
+                    boardElement.appendChild(square);
+                }
+            }
+
+            // Apply board color theme
+            applyBoardColor();
+        }
+
+        // Apply selected board color
+        function applyBoardColor() {
+            const darkSquares = document.querySelectorAll('.dark');
+            const lightSquares = document.querySelectorAll('.light');
+
+            switch (boardColor) {
+                case 'blue':
+                    darkSquares.forEach(sq => sq.style.backgroundColor = '#6b8cff');
+                    lightSquares.forEach(sq => sq.style.backgroundColor = '#b8c6ff');
+                    break;
+                case 'green':
+                    darkSquares.forEach(sq => sq.style.backgroundColor = '#6b994e');
+                    lightSquares.forEach(sq => sq.style.backgroundColor = '#b8d9a6');
+                    break;
+                case 'gray':
+                    darkSquares.forEach(sq => sq.style.backgroundColor = '#888');
+                    lightSquares.forEach(sq => sq.style.backgroundColor = '#ddd');
+                    break;
+                default: // classic
+                    darkSquares.forEach(sq => sq.style.backgroundColor = '#b58863');
+                    lightSquares.forEach(sq => sq.style.backgroundColor = '#f0d9b5');
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            document.getElementById('checkers-board').addEventListener('click', handleBoardClick);
+        }
+
+        // Handle board clicks
+        function handleBoardClick(event) {
+            if (gameOver) return;
+
+            // In computer mode, ignore clicks when it's computer's turn
+            if (gameMode === 'computer' && currentPlayer === 'black') return;
+
+            const square = event.target.closest('.square');
+            if (!square) return;
+
+            const row = parseInt(square.dataset.row);
+            const col = parseInt(square.dataset.col);
+
+            // If clicking on a piece of current player's color
+            if (board[row][col] && board[row][col].type === currentPlayer) {
+                selectedPiece = { row, col };
+                validMoves = getValidMoves(row, col);
+                renderBoard();
+                return;
+            }
+
+            // If clicking on a valid move for the selected piece
+            if (selectedPiece && validMoves.some(move => move.row === row && move.col === col)) {
+                movePiece(selectedPiece.row, selectedPiece.col, row, col);
+                selectedPiece = null;
+                validMoves = [];
+
+                // In computer mode, let computer make a move if it's their turn
+                if (!gameOver && gameMode === 'computer' && currentPlayer === 'black') {
+                    setTimeout(computerMove, 500);
+                }
+            }
+        }
+
+        // Get valid moves for a piece
+        function getValidMoves(row, col) {
+            const piece = board[row][col];
+            if (!piece) return [];
+
+            const moves = [];
+            const directions = piece.king ?
+                [[-1, -1], [-1, 1], [1, -1], [1, 1]] :
+                (piece.type === 'red' ? [[1, -1], [1, 1]] : [[-1, -1], [-1, 1]]);
+
+            // Check for capture moves (priority)
+            let hasCaptures = false;
+
+            for (const [dr, dc] of directions) {
+                const jumpRow = row + dr * 2;
+                const jumpCol = col + dc * 2;
+                const midRow = row + dr;
+                const midCol = col + dc;
+
+                if (isValidPosition(jumpRow, jumpCol) &&
+                    board[midRow][midCol] &&
+                    board[midRow][midCol].type !== piece.type &&
+                    !board[jumpRow][jumpCol]) {
+                    moves.push({ row: jumpRow, col: jumpCol, capture: true, capturedRow: midRow, capturedCol: midCol });
+                    hasCaptures = true;
+                }
+            }
+
+            // If there are captures, only return those
+            if (hasCaptures) return moves;
+
+            // Otherwise, return regular moves
+            for (const [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+
+                if (isValidPosition(newRow, newCol) && !board[newRow][newCol]) {
+                    moves.push({ row: newRow, col: newCol, capture: false });
+                }
+            }
+
+            return moves;
+        }
+
+        // Check if position is valid
+        function isValidPosition(row, col) {
+            return row >= 0 && row < 8 && col >= 0 && col < 8;
+        }
+
+        // Move a piece
+        function movePiece(fromRow, fromCol, toRow, toCol) {
+            const piece = board[fromRow][fromCol];
+            board[fromRow][fromCol] = null;
+            board[toRow][toCol] = piece;
+
+            // Check if the move was a capture
+            const move = validMoves.find(m => m.row === toRow && m.col === toCol);
+            if (move && move.capture) {
+                board[move.capturedRow][move.capturedCol] = null;
+
+                // Check for additional captures
+                const additionalCaptures = getValidMoves(toRow, toCol).filter(m => m.capture);
+                if (additionalCaptures.length > 0 && !piece.king) {
+                    selectedPiece = { row: toRow, col: toCol };
+                    validMoves = additionalCaptures;
+                    renderBoard();
+                    return;
+                }
+            }
+
+            // Check for promotion to king
+            if (!piece.king) {
+                if ((piece.type === 'red' && toRow === 7) || (piece.type === 'black' && toRow === 0)) {
+                    piece.king = true;
+                }
+            }
+
+            // Switch player
+            currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
+            updateGameInfo();
+
+            // Check for game over
+            checkGameOver();
+            renderBoard();
+        }
+
+        // Check if the game is over
+        function checkGameOver() {
+            const redPieces = [];
+            const blackPieces = [];
+            let redHasMoves = false;
+            let blackHasMoves = false;
+
+            // Count pieces and check for valid moves
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if (board[row][col]) {
+                        if (board[row][col].type === 'red') {
+                            redPieces.push({ row, col });
+                            if (getValidMoves(row, col).length > 0) {
+                                redHasMoves = true;
+                            }
+                        } else {
+                            blackPieces.push({ row, col });
+                            if (getValidMoves(row, col).length > 0) {
+                                blackHasMoves = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Determine game outcome
+            if (redPieces.length === 0 || !redHasMoves) {
+                endGame('black');
+            } else if (blackPieces.length === 0 || !blackHasMoves) {
+                endGame('red');
+            }
+        }
+
+        // End the game
+        function endGame(winner) {
+            gameOver = true;
+
+            // Update statistics
+            if (gameMode === 'computer') {
+                statistics.gamesPlayed++;
+                if (winner === 'red') {
+                    statistics.wins++;
+                    document.getElementById('game-info').textContent = 'You win!';
+                } else {
+                    statistics.losses++;
+                    document.getElementById('game-info').textContent = 'Computer wins!';
+                }
+            } else {
+                statistics.friendGames++;
+                document.getElementById('game-info').textContent = `${winner === 'red' ? 'Red' : 'Black'} player wins!`;
+            }
+
+            saveStatistics();
+
+            // Show menu after delay
+            setTimeout(() => {
+                showScreen('menu-screen');
+            }, 3000);
+        }
+
+        // Computer move logic
+        function computerMove() {
+            if (gameOver) return;
+
+            // Get all possible moves
+            const allMoves = [];
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if (board[row][col] && board[row][col].type === 'black') {
+                        const moves = getValidMoves(row, col);
+                        moves.forEach(move => {
+                            allMoves.push({
+                                from: { row, col },
+                                to: { row: move.row, col: move.col },
+                                capture: move.capture,
+                                captured: move.capture ? { row: move.capturedRow, col: move.capturedCol } : null
+                            });
+                        });
+                    }
+                }
+            }
+
+            if (allMoves.length === 0) {
+                endGame('red');
+                return;
+            }
+
+            // Filter for captures (if any)
+            const captures = allMoves.filter(move => move.capture);
+            const movesToConsider = captures.length > 0 ? captures : allMoves;
+
+            // Choose move based on difficulty
+            let chosenMove;
+            const random = Math.random();
+
+            if (difficulty === 'easy') {
+                // Random move, sometimes bad
+                chosenMove = movesToConsider[Math.floor(Math.random() * movesToConsider.length)];
+            } else if (difficulty === 'hard') {
+                // Try to find the best move (prioritize captures and king promotions)
+                chosenMove = movesToConsider[0];
+                let bestScore = -Infinity;
+
+                for (const move of movesToConsider) {
+                    let score = 0;
+
+                    // Captures are good
+                    if (move.capture) score += 5;
+
+                    // Becoming a king is great
+                    if (move.to.row === 0 && board[move.from.row][move.from.col].king === false) {
+                        score += 10;
+                    }
+
+                    // Don't get captured next turn (simple check)
+                    if (!isSquareSafe(move.to.row, move.to.col)) {
+                        score -= 3;
+                    }
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        chosenMove = move;
+                    }
+                }
+            } else {
+                // Medium - mix of random and smart
+                if (random < 0.7) {
+                    // Choose a random capture if available, otherwise random move
+                    chosenMove = movesToConsider[Math.floor(Math.random() * movesToConsider.length)];
+                } else {
+                    // Sometimes make a smart move
+                    chosenMove = movesToConsider[0];
+                    let bestScore = -Infinity;
+
+                    for (const move of movesToConsider) {
+                        let score = 0;
+
+                        if (move.capture) score += 5;
+                        if (move.to.row === 0 && board[move.from.row][move.from.col].king === false) {
+                            score += 10;
+                        }
+
+                        if (score > bestScore) {
+                            bestScore = score;
+                            chosenMove = move;
+                        }
+                    }
+                }
+            }
+
+            // Execute the move
+            selectedPiece = { row: chosenMove.from.row, col: chosenMove.from.col };
+            validMoves = [{
+                row: chosenMove.to.row,
+                col: chosenMove.to.col,
+                capture: chosenMove.capture,
+                capturedRow: chosenMove.capture ? chosenMove.captured.row : null,
+                capturedCol: chosenMove.capture ? chosenMove.captured.col : null
+            }];
+
+            setTimeout(() => {
+                movePiece(chosenMove.from.row, chosenMove.from.col, chosenMove.to.row, chosenMove.to.col);
+                selectedPiece = null;
+                validMoves = [];
+            }, 500);
+        }
+
+        // Check if a square is safe from immediate capture
+        function isSquareSafe(row, col) {
+            // Check all adjacent opponent pieces that could capture this square
+            const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+
+            for (const [dr, dc] of directions) {
+                const opponentRow = row + dr;
+                const opponentCol = col + dc;
+                const jumpRow = row - dr;
+                const jumpCol = col - dc;
+
+                if (isValidPosition(opponentRow, opponentCol) &&
+                    board[opponentRow][opponentCol] &&
+                    board[opponentRow][opponentCol].type === 'red' &&
+                    isValidPosition(jumpRow, jumpCol) &&
+                    !board[jumpRow][jumpCol]) {
+
+                    // The piece can be captured
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Screen navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('#game-container > div').forEach(screen => {
+                screen.style.display = 'none';
+            });
+
+            document.getElementById(screenId).style.display = 'flex';
+
+            if (screenId === 'game-screen') {
+                createBoard();
+            } else if (screenId === 'statistics-screen') {
+                updateStatisticsDisplay();
+            }
+        }
+
+        // Return to menu from game
+        function returnToMenu() {
+            if (confirm('Are you sure you want to return to the menu? The current game will be lost.')) {
+                showScreen('menu-screen');
+            }
+        }
+
+        // Options handling
+        function loadOptions() {
+            const savedOptions = localStorage.getItem('checkersOptions');
+            if (savedOptions) {
+                const options = JSON.parse(savedOptions);
+                difficulty = options.difficulty || 'medium';
+                startingPlayer = options.startingPlayer || 'random';
+                boardColor = options.boardColor || 'classic';
+
+                document.getElementById('difficulty').value = difficulty;
+                document.getElementById('starting-player').value = startingPlayer;
+                document.getElementById('board-color').value = boardColor;
+            }
+        }
+
+        function saveOptions() {
+            difficulty = document.getElementById('difficulty').value;
+            startingPlayer = document.getElementById('starting-player').value;
+            boardColor = document.getElementById('board-color').value;
+
+            const options = {
+                difficulty,
+                startingPlayer,
+                boardColor
+            };
+
+            localStorage.setItem('checkersOptions', JSON.stringify(options));
+            alert('Options saved!');
+        }
+
+        // Statistics handling
+        function loadStatistics() {
+            const savedStats = localStorage.getItem('checkersStatistics');
+            if (savedStats) {
+                statistics = JSON.parse(savedStats);
+            }
+        }
+
+        function saveStatistics() {
+            localStorage.setItem('checkersStatistics', JSON.stringify(statistics));
+        }
+
+        function updateStatisticsDisplay() {
+            document.getElementById('games-played').textContent = statistics.gamesPlayed;
+            document.getElementById('wins').textContent = statistics.wins;
+            document.getElementById('losses').textContent = statistics.losses;
+            document.getElementById('draws').textContent = statistics.draws;
+            document.getElementById('friend-games').textContent = statistics.friendGames;
+
+            const winRate = statistics.gamesPlayed > 0 ?
+                Math.round((statistics.wins / statistics.gamesPlayed) * 100) : 0;
+            document.getElementById('win-rate').textContent = `${winRate}%`;
+        }
+
+        function resetStatistics() {
+            if (confirm('Are you sure you want to reset all statistics?')) {
+                statistics = {
+                    gamesPlayed: 0,
+                    wins: 0,
+                    losses: 0,
+                    draws: 0,
+                    friendGames: 0
+                };
+                saveStatistics();
+                updateStatisticsDisplay();
+            }
+        }
+
+        // Initialize the game when the page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
