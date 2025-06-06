@@ -1,0 +1,24 @@
+name: Run Flask Application
+
+on: [push]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'  # Adjust as necessary
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run app with Gunicorn
+        run: |
+          pip install gunicorn
+          gunicorn app:app --bind 0.0.0.0:5000
