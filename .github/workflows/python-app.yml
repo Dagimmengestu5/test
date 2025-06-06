@@ -1,4 +1,4 @@
-name: Run Python Application
+name: Run Flask Application
 
 on: [push]
 
@@ -18,5 +18,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run app.py
-        run: python app.py
+      - name: Run app with Gunicorn
+        run: |
+          pip install gunicorn
+          gunicorn app:app --bind 0.0.0.0:5000
