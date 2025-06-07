@@ -1,7 +1,7 @@
 import os
 import re
 from functools import wraps
-from flask import Flask, send_file, jsonify, request, send_from_directory, Response
+from flask import Flask, send_file, jsonify, request, send_from_directory, Response, make_response
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import mimetypes
@@ -29,10 +29,13 @@ PREVIEW_TYPES = {
 
 # Initialize mimetypes
 mimetypes.add_type('application/pdf', '.pdf')
+mimetypes.add_type('audio/mpeg', '.mp3')
+mimetypes.add_type('audio/wav', '.wav')
+mimetypes.add_type('audio/ogg', '.ogg')
+mimetypes.add_type('audio/mp4', '.m4a')
+
 
 # Helper functions
-
-
 def get_safe_path(requested_path):
     requested_path = requested_path.lstrip('/')
     full_path = os.path.join(BASE_DIR, requested_path)
@@ -49,6 +52,11 @@ def get_file_type(filename):
         if ext in extensions:
             return file_type
     return 'other'
+
+
+def is_telegram_request():
+    user_agent = request.headers.get('User-Agent', '').lower()
+    return 'telegram' in user_agent
 
 
 # Authentication decorator
@@ -161,38 +169,28 @@ def view_file():
         if not mime_type:
             mime_type = 'application/octet-stream'
 
-        # Special handling for PDFs in Telegram Web
-        user_agent = request.headers.get('User-Agent', '').lower()
-        is_telegram = 'telegram' in user_agent
+        # Special handling for Telegram Web
+        if is_telegram_request():
+            # For Telegram Web, we need to force the browser to handle the file
+            response = make_response(send_file(full_path, mimetype=mime_type))
 
-        if full_path.lower().endswith('.pdf'):
-            if is_telegram:
-                # For Telegram Web, we need to force the PDF to open in the browser
-                response = send_file(
-                    full_path,
-                    mimetype=mime_type,
-                    conditional=True
-                )
+            # Set appropriate headers for different file types
+            if full_path.lower().endswith('.pdf'):
                 response.headers['Content-Disposition'] = 'inline; filename="{}"'.format(os.path.basename(full_path))
-                response.headers['X-Content-Type-Options'] = 'nosniff'
-                return response
-            else:
-                # For regular browsers
-                response = send_file(
-                    full_path,
-                    mimetype=mime_type,
-                    conditional=True
-                )
+            elif any(full_path.lower().endswith(ext) for ext in PREVIEW_TYPES['audio']):
                 response.headers['Content-Disposition'] = 'inline'
-                return response
+                response.headers['Accept-Ranges'] = 'bytes'  # Important for audio streaming
 
-        # For other file types that browsers can display directly
-        if mime_type.startswith(('image/', 'text/', 'video/', 'audio/')):
-            response = send_file(
-                full_path,
-                mimetype=mime_type,
-                conditional=True
-            )
+            # Add CORS headers for Telegram
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Expose-Headers'] = 'Content-Length,Content-Range'
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+
+            return response
+
+        # For regular browsers
+        if mime_type.startswith(('image/', 'text/', 'video/', 'audio/', 'application/pdf')):
+            response = send_file(full_path, mimetype=mime_type, conditional=True)
             response.headers['Content-Disposition'] = 'inline'
             return response
 
@@ -201,8 +199,7 @@ def view_file():
             full_path,
             mimetype=mime_type,
             as_attachment=True,
-            download_name=os.path.basename(full_path)
-        )
+            download_name=os.path.basename(full_path))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -234,21 +231,23 @@ def preview_file():
         if not mime_type:
             mime_type = 'application/octet-stream'
 
-        # Special handling for PDF preview in Telegram
-        user_agent = request.headers.get('User-Agent', '').lower()
-        is_telegram = 'telegram' in user_agent
+        # Special handling for Telegram Web
+        if is_telegram_request():
+            response = make_response(send_file(full_path, mimetype=mime_type))
 
-        if file_type == 'pdf' and is_telegram:
-            response = send_file(
-                full_path,
-                mimetype=mime_type,
-                conditional=True
-            )
-            response.headers['Content-Disposition'] = 'inline; filename="{}"'.format(os.path.basename(full_path))
+            if file_type == 'pdf':
+                response.headers['Content-Disposition'] = 'inline; filename="{}"'.format(os.path.basename(full_path))
+            elif file_type == 'audio':
+                response.headers['Content-Disposition'] = 'inline'
+                response.headers['Accept-Ranges'] = 'bytes'
+
+            # Add CORS headers for Telegram
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Expose-Headers'] = 'Content-Length,Content-Range'
+
             return response
 
         return send_file(full_path, mimetype=mime_type)
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -278,12 +277,14 @@ def stream_file():
         mime_type = 'application/octet-stream'
 
     if not range_header:
-        response = send_file(
-            full_path,
-            mimetype=mime_type,
-            conditional=True
-        )
+        response = send_file(full_path, mimetype=mime_type, conditional=True)
         response.headers['Accept-Ranges'] = 'bytes'
+
+        # Special headers for Telegram Web
+        if is_telegram_request():
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Expose-Headers'] = 'Content-Length,Content-Range'
+
         return response
 
     byte1, byte2 = 0, None
@@ -308,6 +309,11 @@ def stream_file():
     response.headers.add('Content-Range', f'bytes {byte1}-{byte2 if byte2 else file_size - 1}/{file_size}')
     response.headers.add('Accept-Ranges', 'bytes')
     response.headers.add('Content-Length', str(length))
+
+    # Special headers for Telegram Web
+    if is_telegram_request():
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Expose-Headers'] = 'Content-Length,Content-Range'
 
     return response
 
