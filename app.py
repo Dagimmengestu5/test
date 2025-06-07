@@ -123,6 +123,12 @@ def list_files():
         folders = []
         files = []
 
+        # Natural sort key function
+        def natural_sort_key(s):
+            import re
+            return [int(text) if text.isdigit() else text.lower()
+                    for text in re.split('([0-9]+)', s)]
+
         for item in items:
             item_path = os.path.join(full_path, item)
             if os.path.isdir(item_path):
@@ -135,8 +141,9 @@ def list_files():
                     'path': os.path.join(path, item).replace('\\', '/')
                 })
 
-        folders.sort(key=lambda x: x.lower())
-        files.sort(key=lambda x: x['name'].lower())
+        # Sort folders and files using natural sort
+        folders.sort(key=natural_sort_key)
+        files.sort(key=lambda x: natural_sort_key(x['name']))
 
         return jsonify({
             'path': path,
@@ -145,7 +152,6 @@ def list_files():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/view')
 @auth_required
