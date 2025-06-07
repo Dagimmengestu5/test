@@ -302,31 +302,77 @@
 
         /* Responsive design */
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
+    .container {
+        padding: 15px;
+    }
 
-            h1 {
-                font-size: 1.8rem;
-            }
+    h1 {
+        font-size: 1.8rem;
+    }
 
-            .file-item {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 15px;
-            }
+    .file-item {
+        display: flex;
+        flex-direction: row; /* Keep items in a row */
+        align-items: center; /* Center items vertically */
+        padding: 10px 5px; /* Reduce padding */
+        overflow-x: auto; /* Allow horizontal scrolling if needed */
+        white-space: nowrap; /* Prevent wrapping */
+    }
 
-            .file-actions {
-                margin-top: 10px;
-                width: 100%;
-                justify-content: flex-end;
-            }
+    .file-icon {
+        margin-right: 8px; /* Reduce margin */
+        font-size: 16px; /* Smaller icon */
+    }
 
-            .file-info {
-                width: 100%;
-            }
+    .file-name {
+        font-size: 14px; /* Smaller font */
+        max-width: 120px; /* Limit width */
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-        }
+    .file-details {
+        font-size: 11px; /* Smaller details */
+        flex-direction: column; /* Stack size and type */
+    }
+
+    .file-actions {
+        margin-top: 0; /* Remove top margin */
+        gap: 5px; /* Reduce gap between buttons */
+    }
+
+    .file-action-btn {
+        font-size: 14px; /* Smaller buttons */
+        width: 28px;
+        height: 28px;
+    }
+
+    /* Adjust breadcrumb for mobile */
+    .breadcrumb {
+        font-size: 14px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 5px;
+    }
+
+    /* Hide some breadcrumb items if needed */
+    .breadcrumb a:not(:last-child):not(:first-child) {
+        display: none;
+    }
+
+    .breadcrumb-separator {
+        margin: 0 3px;
+    }
+
+    /* Add ellipsis for middle items */
+    .breadcrumb a:first-child + .breadcrumb-separator + a {
+        display: inline-block;
+        max-width: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: bottom;
+    }
+}
 
         /* Animation for file items */
         @keyframes fadeInItem {

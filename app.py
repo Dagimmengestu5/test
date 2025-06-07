@@ -27,8 +27,12 @@ PREVIEW_TYPES = {
     'text': ['txt', 'csv', 'json', 'xml', 'md']
 }
 
+# Initialize mimetypes
+mimetypes.add_type('application/pdf', '.pdf')
 
 # Helper functions
+
+
 def get_safe_path(requested_path):
     requested_path = requested_path.lstrip('/')
     full_path = os.path.join(BASE_DIR, requested_path)
@@ -157,8 +161,33 @@ def view_file():
         if not mime_type:
             mime_type = 'application/octet-stream'
 
-        # For browsers that can display the content directly
-        if mime_type.startswith(('image/', 'application/pdf', 'text/', 'video/', 'audio/')):
+        # Special handling for PDFs in Telegram Web
+        user_agent = request.headers.get('User-Agent', '').lower()
+        is_telegram = 'telegram' in user_agent
+
+        if full_path.lower().endswith('.pdf'):
+            if is_telegram:
+                # For Telegram Web, we need to force the PDF to open in the browser
+                response = send_file(
+                    full_path,
+                    mimetype=mime_type,
+                    conditional=True
+                )
+                response.headers['Content-Disposition'] = 'inline; filename="{}"'.format(os.path.basename(full_path))
+                response.headers['X-Content-Type-Options'] = 'nosniff'
+                return response
+            else:
+                # For regular browsers
+                response = send_file(
+                    full_path,
+                    mimetype=mime_type,
+                    conditional=True
+                )
+                response.headers['Content-Disposition'] = 'inline'
+                return response
+
+        # For other file types that browsers can display directly
+        if mime_type.startswith(('image/', 'text/', 'video/', 'audio/')):
             response = send_file(
                 full_path,
                 mimetype=mime_type,
@@ -176,6 +205,8 @@ def view_file():
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/preview')
 @auth_required
 def preview_file():
@@ -202,6 +233,19 @@ def preview_file():
         mime_type, _ = mimetypes.guess_type(full_path)
         if not mime_type:
             mime_type = 'application/octet-stream'
+
+        # Special handling for PDF preview in Telegram
+        user_agent = request.headers.get('User-Agent', '').lower()
+        is_telegram = 'telegram' in user_agent
+
+        if file_type == 'pdf' and is_telegram:
+            response = send_file(
+                full_path,
+                mimetype=mime_type,
+                conditional=True
+            )
+            response.headers['Content-Disposition'] = 'inline; filename="{}"'.format(os.path.basename(full_path))
+            return response
 
         return send_file(full_path, mimetype=mime_type)
 
@@ -234,7 +278,6 @@ def stream_file():
         mime_type = 'application/octet-stream'
 
     if not range_header:
-        # Simple response for non-range requests
         response = send_file(
             full_path,
             mimetype=mime_type,
@@ -243,7 +286,6 @@ def stream_file():
         response.headers['Accept-Ranges'] = 'bytes'
         return response
 
-    # Handle range requests for audio streaming
     byte1, byte2 = 0, None
     range_ = range_header.split('bytes=')[1].split('-')
     byte1 = int(range_[0])
@@ -268,6 +310,7 @@ def stream_file():
     response.headers.add('Content-Length', str(length))
 
     return response
+
 
 @app.route('/api/download')
 @auth_required
@@ -295,8 +338,7 @@ def download_file():
             full_path,
             mimetype=mime_type,
             as_attachment=True,
-            download_name=os.path.basename(full_path)
-        )
+            download_name=os.path.basename(full_path))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
